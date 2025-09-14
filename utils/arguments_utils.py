@@ -254,6 +254,7 @@ def get_parser(is_eval=False):
         parser.add_argument("--pad_length", type=int, default=-1)
     parser.add_argument("--window_size", type=int, default=13)
     parser.add_argument("--vit_checkpoint_path", type=str)
+    parser.add_argument("--custom_eval_sequences", type=str, default=None)
     args = parser.parse_args()
 
     return parser

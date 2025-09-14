@@ -1,21 +1,25 @@
 #!/bin/bash
 export GIT_PYTHON_REFRESH=quiet
-calvin_dataset_path="calvin/dataset/task_ABC_D"
-calvin_conf_path="calvin/calvin_models/conf"
-vit_checkpoint_path="checkpoints/vit_mae/mae_pretrain_vit_base.pth" # downloaded from https://drive.google.com/file/d/1bSsvRI4mDM3Gg51C6xO0l9CbojYw3OEt/view?usp=sharing
-save_checkpoint_path="checkpoints/"
+# calvin_dataset_path="calvin/dataset/task_ABC_D"
+# calvin_conf_path="calvin/calvin_models/conf"
+# vit_checkpoint_path="checkpoints/vit_mae/mae_pretrain_vit_base.pth" # downloaded from https://drive.google.com/file/d/1bSsvRI4mDM3Gg51C6xO0l9CbojYw3OEt/view?usp=sharing
+# save_checkpoint_path="checkpoints/"
+calvin_dataset_path="/data/user_data/sreyasv/calvin_dataset/task_D_D"
+save_checkpoint_path="/data/user_data/sreyasv/seer_d/checkpoints/seer_calvin_d"
+vit_checkpoint_path="/data/user_data/sreyasv/seer_d/checkpoints/mae_pretrain_vit_base.pth"
+calvin_conf_path="/home/sreyasv/calvin/calvin_models/conf"
 ### NEED TO CHANGE the checkpoint path ###
-resume_from_checkpoint="checkpoints/xxx/xx.pth"
+resume_from_checkpoint="${save_checkpoint_path}/pretrain_seer_calvin_d_multi/17.pth"
 IFS='/' read -ra path_parts <<< "$resume_from_checkpoint"
 run_name="${path_parts[-2]}"
 log_name="${path_parts[-1]}"
-log_folder="eval_logs/$run_name"
+log_folder="${save_checkpoint_path}/pretrain_seer_calvin_d_multi/eval_logs/$run_name"
 mkdir -p "$log_folder"
-log_file="eval_logs/$run_name/evaluate_$log_name.log"
+log_file="$log_folder/evaluate_$log_name.log"
 node=1
-node_num=8
+node_num=1
 
-torchrun --nnodes=${node} --nproc_per_node=${node_num} --master_port=10012 eval_calvin.py \
+torchrun --nnodes=${node} --nproc_per_node=${node_num} --master_port=12345 eval_calvin.py \
     --traj_cons \
     --rgb_pad 10 \
     --gripper_pad 4 \
@@ -42,8 +46,10 @@ torchrun --nnodes=${node} --nproc_per_node=${node_num} --master_port=10012 eval_
     --phase "evaluate" \
     --finetune_type "calvin" \
     --action_pred_steps 3 \
-    --sequence_length 10 \
+    --sequence_length 14 \
     --future_steps 3 \
-    --window_size 13 \
+    --window_size 17 \
     --obs_pred \
-    --resume_from_checkpoint ${resume_from_checkpoint} | tee ${log_file} \
+    --resume_from_checkpoint ${resume_from_checkpoint} \
+    --custom_eval_sequences utils/eval_sequences.json | tee ${log_file}\
+    # --report_to_wandb \
