@@ -9,9 +9,9 @@ finetune_from_pretrained_ckpt="/data/user_data/sreyasv/seer_libero/checkpoints/s
 ### NEED TO CHANGE ###
 calvin_dataset_path="~/calvin/dataset/task_D_D"
 
-node=1
+node=8
 node_num=1
-torchrun --nnodes=${node} --nproc_per_node=${node_num} --master_port=10211 train.py \
+torchrun --nnodes=${node} --nproc_per_node=${node_num} --master_port=10211 train_flow.py \
     --traj_cons \
     --rgb_pad 10 \
     --gripper_pad 4 \
@@ -24,7 +24,7 @@ torchrun --nnodes=${node} --nproc_per_node=${node_num} --master_port=10211 train
     --save_every_iter 100000 \
     --num_epochs 40 \
     --seed 42 \
-    --batch_size 16 \
+    --batch_size 1 \
     --precision fp32 \
     --learning_rate 1e-3 \
     --save_checkpoint \
@@ -49,7 +49,7 @@ torchrun --nnodes=${node} --nproc_per_node=${node_num} --master_port=10211 train
     --gripper_width \
     --warmup_epochs 5 \
     --libero_path ${libero_path} \
-    --finetune_from_pretrained_ckpt ${finetune_from_pretrained_ckpt} \
+    # --finetune_from_pretrained_ckpt ${finetune_from_pretrained_ckpt} \
     # --report_to_wandb \
     # --reset_action_token \
     # --reset_obs_token \
