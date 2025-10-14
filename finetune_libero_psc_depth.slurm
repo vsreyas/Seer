@@ -2,7 +2,7 @@
 #SBATCH -N 1
 #SBATCH -p GPU-shared
 #SBATCH -t 48:00:00
-#SBATCH --gpus=v100-32:2
+#SBATCH --gpus=l40s-48:2
 
 
 set -x
@@ -11,10 +11,11 @@ module load anaconda3/2024.10-1
 conda activate seer
 
 # ==== CONFIGURE PATHS ====
-save_checkpoint_path="/ocean/projects/cis250181p/venkatas/seer_libero_pretrain_depth/checkpoints"
+save_checkpoint_path="/ocean/projects/cis250181p/venkatas/seer_libero_finetune_depth/checkpoints"
 root_dir="/ocean/projects/cis250181p/venkatas/Seer/data/LIBERO"
 libero_path="/ocean/projects/cis250181p/venkatas/Seer/LIBERO"
-
+finetune_from_pretrained_ckpt="/ocean/projects/cis250181p/venkatas/seer_libero_pretrain_depth/checkpoints/libero_pretrain_depth_clip_resnet_action_only/19.pth"
+### ================================== ###
 mkdir -p ${save_checkpoint_path}
 
 GPUS_PER_NODE=2
@@ -32,35 +33,33 @@ srun --ntasks=${WORLD_SIZE} \
          --workers 16 \
          --lr_scheduler cosine \
          --save_every_iter 10000 \
-         --num_epochs 40 \
+         --num_epochs 50 \
          --seed 42 \
-         --batch_size 32 \
+         --batch_size 48 \
          --precision fp32 \
-         --learning_rate 1e-4 \
+         --learning_rate 1e-3 \
          --save_checkpoint \
-         --finetune_type libero_pretrain \
+         --finetune_type libero_finetune \
          --root_dir ${root_dir} \
          --wandb_project seer \
          --weight_decay 1e-4 \
          --num_resampler_query 3 \
-         --run_name libero_pretrain_depth_clip_resnet_action_only \
+         --run_name libero_finetune_depth_clip_resnet_action_only \
          --save_checkpoint_path ${save_checkpoint_path} \
          --transformer_layers 6 \
          --transformer_heads 6 \
          --hidden_dim 192 \
-         --phase "pretrain" \
-         --sequence_length 11 \
+         --phase "finetune" \
+         --sequence_length 7 \
          --action_pred_steps 3 \
          --future_steps 3 \
-         --atten_goal 4 \
          --window_size 11 \
          --loss_action \
          --gripper_width \
-         --atten_only_obs \
-         --atten_goal_state \
-         --mask_l_obs_ratio 0.5 \
-         --warmup_epochs 1 \
+         --reset_action_token \
+         --warmup_epochs 3 \
          --libero_path ${libero_path} \
+         --finetune_from_pretrained_ckpt ${finetune_from_pretrained_ckpt} \
          --report_to_wandb \
          --use_text \
          --use_state \

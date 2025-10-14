@@ -201,8 +201,6 @@ def main(args):
         if args.rank == 0:
             print(f"Starting finetuning from pretrained checkpoint {args.finetune_from_pretrained_ckpt}")    
         checkpoint = torch.load(args.finetune_from_pretrained_ckpt, map_location="cpu")
-        image_decoder_keys = [k for k in checkpoint["model_state_dict"].keys() if "image_decoder" in k]
-        projector_keys = [k for k in checkpoint["model_state_dict"].keys() if "projector" in k]
         action_decoder_keys = [k for k in checkpoint["model_state_dict"].keys() if "action_decoder" in k]
         if args.reset_action_token:
             del checkpoint["model_state_dict"]["module.action_pred_token"] 
@@ -211,6 +209,7 @@ def main(args):
         if args.reset_mask_token:
             del checkpoint["model_state_dict"]["module.mask_token"] 
         if args.reset_image_decoder:
+            image_decoder_keys = [k for k in checkpoint["model_state_dict"].keys() if "image_decoder" in k]
             for k in image_decoder_keys:
                 if k in checkpoint["model_state_dict"]:
                     del checkpoint["model_state_dict"][k]
