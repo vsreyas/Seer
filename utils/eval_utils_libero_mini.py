@@ -329,17 +329,21 @@ def evaluate_libero_task(task, env, obs, args, model):
     success = 0
     model.reset()
     goal = task.language
+    img_array = []
     with torch.no_grad():
         while steps < args.libero_eval_max_steps: # default
             action = model.step(obs, goal, steps, env) 
             steps += 1
             
             obs, reward, done, info = env.step(action)
+            image = obs["agentview_image"]
+            image = Image.fromarray(image)
+            img_array.append(image)
             if done:
                 success = 1
                 break 
     env.close()
-    return success
+    return success, img_array
 
 def evaluate_policy_ddp(args, model):
     pass 
@@ -352,7 +356,7 @@ def evaluate_policy_ddp(args, model):
         if args.finetune_type == "libero_10":
             global num_eval_episodes 
             global task_num
-            num_eval_episodes = 20
+            num_eval_episodes = 2#20
             task_num = 10
              
             NUM_SEQUENCES = num_eval_episodes * task_num 
@@ -398,9 +402,10 @@ def evaluate_policy_ddp(args, model):
         for _ in range(5):  # simulate the physics without any actions
             env.step(np.zeros(7))
 
-        result = evaluate_libero_task(task, env, obs, args, model)
+        result, img_array = evaluate_libero_task(task, env, obs, args, model)
         results.append(result) 
         print("rank", torch.distributed.get_rank(), "results :", results)
+        save_gif(img_array, f"/home/venky/Projects/Seer/vis/pretrained_chekpoint_19_with_depth_without_obs/{eval_id}")
     
     def merge_multi_list(res):
         tmp = []
@@ -447,3 +452,37 @@ def eval_one_epoch_libero_ddp(args, model, image_processor, tokenizer):
                         action_pred_steps = args.action_pred_steps,
                         gripper_width=args.gripper_width)
     evaluate_policy_ddp(args, wrapped_model)
+
+def save_gif(images, save_path, duration=100, loop=0):
+    """
+    Save a list of PIL Images as an animated GIF.
+
+    Parameters:
+    ----------
+    images : list of PIL.Image.Image
+        List of frames (must all be the same size and mode).
+    save_path : str
+        Path where the GIF will be saved (e.g. 'output.gif').
+    duration : int, optional
+        Duration per frame in milliseconds. Default is 100 ms.
+    loop : int, optional
+        Number of times the GIF should loop.
+        0 means infinite looping (default).
+    """
+    if not images:
+        raise ValueError("No images provided to save as GIF.")
+
+    # Convert all frames to the same mode as the first
+    first = images[0].convert("RGBA")
+    frames = [img.convert("RGBA") for img in images[1:]]
+
+    # Save as GIF
+    first.save(
+        save_path,
+        format="GIF",
+        save_all=True,
+        append_images=frames,
+        duration=duration,
+        loop=loop
+    )
+    print(f"GIF saved successfully at {save_path}")

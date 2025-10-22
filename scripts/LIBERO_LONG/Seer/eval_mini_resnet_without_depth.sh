@@ -58,4 +58,6 @@ torchrun --nnodes=${node} --nproc_per_node=${node_num} --master_port=10211 eval_
     --model_size tiny \
     --seer_mini \
     --eval_libero_ensembling \
-    --resume_from_checkpoint /home/venky/Projects/Seer/checkpoints/libero_pretrain_depth_clip_resnet_action_only/0.pth\
+    --libero_path ${libero_path} \
+    --resume_from_checkpoint /home/venky/Projects/Seer/checkpoints/libero_pretrain_depth_clip_resnet_action_only/19.pth | tee ${logfile}\
+    
